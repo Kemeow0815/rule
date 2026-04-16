@@ -1,0 +1,129 @@
+# Clash Meta 去广告配置文件
+# 自动生成 - 每 4 小时更新
+
+mixed-port: 7890
+allow-lan: false
+mode: rule
+log-level: info
+ipv6: false
+
+# DNS 配置 - 实现国内外智能分流
+dns:
+  enable: true
+  listen: 0.0.0.0:53
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - '*.lan'
+    - '*.localdomain'
+    - '*.example'
+    - '*.invalid'
+    - '*.localhost'
+    - '*.test'
+    - '*.local'
+    - 'time.*.com'
+    - 'market.xiaomi.com'
+  
+  # 去广告 DNS
+  nameserver:
+    - https://2026.dns1.top/dns-query
+    - https://dns.ipv4dns.com/dns-query
+    - http://dns.trli.club/doh/ad-dns-pro
+  
+  # 国外 DNS（用于解析国外域名）
+  proxy-server-nameserver:
+    - 8.8.8.8
+    - 1.1.1.1
+  
+  # DNS 分流规则
+  nameserver-policy:
+    # 国内域名使用去广告 DNS
+    '+.cn':
+      - https://2026.dns1.top/dns-query
+      - https://dns.ipv4dns.com/dns-query
+    # 国外域名使用公共 DNS
+    '+.google.com':
+      - 8.8.8.8
+      - 1.1.1.1
+    '+.github.com':
+      - 8.8.8.8
+      - 1.1.1.1
+    '+.youtube.com':
+      - 8.8.8.8
+      - 1.1.1.1
+
+# 规则提供者配置
+rule-providers:
+  # 秋风广告规则
+  AWAvenue-Ads-Rule:
+    type: http
+    behavior: classical
+    format: yaml
+    path: ./rule_providers/AWAvenue-Ads-Rule-Clash.yaml
+    url: https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml
+    interval: 86400
+  
+  # DD-AD 广告规则
+  DD-AD:
+    type: http
+    behavior: classical
+    format: yaml
+    path: ./rule_providers/DD-AD.yaml
+    url: https://ghproxy.net/https://raw.githubusercontent.com/afwfv/DD-AD/refs/heads/release/clash.yaml
+    interval: 86400
+  
+  # 217heidai 广告规则
+  217heidai-ads:
+    type: http
+    behavior: classical
+    format: yaml
+    path: ./rule_providers/217heidai-adblock.yaml
+    url: https://gcore.jsdelivr.net/gh/217heidai/adblockfilters@main/rules/adblockmihomo.yaml
+    interval: 86400
+
+# 代理组配置
+proxy-groups:
+  # 自动选择代理组
+  - name: 自动选择
+    type: url-test
+    proxies: []
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+  
+  # 手动选择代理组
+  - name: 手动选择
+    type: select
+    proxies:
+      - 自动选择
+  
+  # 广告拦截组
+  - name: AdBlock
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+
+# 规则配置
+rules:
+  # 广告拦截规则 - 使用三个规则源
+  - RULE-SET,AWAvenue-Ads-Rule,REJECT
+  - RULE-SET,DD-AD,REJECT
+  - RULE-SET,217heidai-ads,REJECT
+  
+  # 本地网络直连
+  - IP-CIDR,192.168.0.0/16,DIRECT
+  - IP-CIDR,10.0.0.0/8,DIRECT
+  - IP-CIDR,172.16.0.0/12,DIRECT
+  
+  # 常见广告域名拦截
+  - DOMAIN-SUFFIX,ad.com,REJECT
+  - DOMAIN-KEYWORD,ad,REJECT
+  - DOMAIN-KEYWORD,ads,REJECT
+  - DOMAIN-KEYWORD,push,REJECT
+  
+  # 国内网站直连
+  - GEOIP,CN,DIRECT
+  
+  # 剩余流量自动选择
+  - MATCH,自动选择
