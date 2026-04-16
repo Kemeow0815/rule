@@ -129,22 +129,35 @@ proxy-groups:
 
 # 规则配置
 rules:
+  # ========== 白名单规则（必须放在最前面）==========
+  # 如果某些网站被误判为广告，在这里添加白名单规则
+  # 格式：- DOMAIN-SUFFIX，域名，DIRECT
+  
+  # 示例白名单（根据需要取消注释并修改）
+  - DOMAIN-SUFFIX,offline-download.hupu.com,DIRECT
+  # - DOMAIN-SUFFIX,mysite.com,DIRECT
+  # - DOMAIN,specific-page.com,DIRECT
+  
+  # ========== 广告拦截规则 ==========
   # 广告拦截规则 - 使用三个规则源
   - RULE-SET,AWAvenue-Ads-Rule,REJECT
   - RULE-SET,DD-AD,REJECT
   - RULE-SET,217heidai-ads,REJECT
   
+  # ========== 本地网络直连 ==========
   # 本地网络直连
   - IP-CIDR,192.168.0.0/16,DIRECT
   - IP-CIDR,10.0.0.0/8,DIRECT
   - IP-CIDR,172.16.0.0/12,DIRECT
   
+  # ========== 常见广告域名拦截 ==========
   # 常见广告域名拦截
   - DOMAIN-SUFFIX,ad.com,REJECT
   - DOMAIN-KEYWORD,ad,REJECT
   - DOMAIN-KEYWORD,ads,REJECT
   - DOMAIN-KEYWORD,push,REJECT
   
+  # ========== 国内网站直连 ==========
   # 国内网站直连
   - GEOIP,CN,DIRECT
   

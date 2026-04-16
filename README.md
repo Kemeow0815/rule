@@ -116,6 +116,33 @@ rules:
   - DOMAIN-SUFFIX,example.com,DIRECT
 ```
 
+#### 方式 1.5：解决网站误判（白名单配置）
+
+**如果某些网站被误判为广告**，请查看专门的白名单配置文档：
+
+👉 [**WHITELIST.md**](WHITELIST.md) - 网站白名单配置指南
+
+**快速添加白名单**：
+
+1. 编辑 `data/config.yaml`
+2. 在 `rules` 部分**最前面**添加：
+   ```yaml
+   rules:
+     # 白名单（必须放在广告拦截规则之前）
+     - DOMAIN-SUFFIX,被误判的网站.com,DIRECT
+     
+     # 然后才是广告拦截规则
+     - RULE-SET,AWAvenue-Ads-Rule,REJECT
+   ```
+
+**常见误判场景**：
+- ✅ 网站功能异常 → 添加整个域名到白名单
+- ✅ 应用无法联网 → 添加 API 域名到白名单
+- ✅ 开发环境被拦截 → 添加 localhost 或测试域名
+- ✅ 推送通知失败 → 添加推送服务域名
+
+详细配置方法请查看 [WHITELIST.md](WHITELIST.md)
+
 #### 方式二：添加新的规则提供者
 
 1. **编辑配置文件** `data/config.yaml`，在 `rule-providers` 部分添加：
@@ -473,8 +500,11 @@ rule/
 │       ├── DD-AD.yaml
 │       └── 217heidai-adblock.yaml
 ├── .gitignore                  # Git 忽略文件配置
+├── WHITELIST.md                # 网站白名单配置指南 ⭐
 ├── QUICKSTART.md               # 快速配置指南
-└── README.md                   # 使用说明
+├── FIXES.md                    # 问题修复说明
+├── README.md                   # 主文档
+└── verify-config.py            # 配置验证脚本
 ```
 
 ## 许可证
@@ -491,6 +521,7 @@ rule/
 
 ## 更新日志
 
+- 2026-04-16：添加网站白名单配置指南，解决误判问题
 - 2026-04-16：修复代理组验证错误，添加占位符文件，使用 `use` 引用代理提供者
 - 2026-04-16：修复 `proxy-providers` 缺失问题，添加快速配置指南
 - 2026-04-16：初始版本，整合三个广告规则源，实现 DNS 智能分流
