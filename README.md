@@ -102,6 +102,8 @@
 
 ### 添加自定义规则
 
+#### 方式一：在配置文件中直接添加规则
+
 编辑 `data/config.yaml`，在 `rules` 部分添加：
 
 ```yaml
@@ -114,22 +116,288 @@ rules:
   - DOMAIN-SUFFIX,example.com,DIRECT
 ```
 
-### 修改 DNS 配置
+#### 方式二：添加新的规则提供者
 
-编辑 `data/config.yaml` 中的 `dns` 部分：
+1. **编辑配置文件** `data/config.yaml`，在 `rule-providers` 部分添加：
+
+```yaml
+rule-providers:
+  # 已有的规则提供者...
+  
+  # 添加新的规则提供者（示例）
+  Your-Custom-Rule:
+    type: http          # 类型：http（网络下载）或 file（本地文件）
+    behavior: classical # 行为：classical（经典规则）或 ipcidr（IP CIDR 规则）或 domain（域名规则）
+    format: yaml        # 格式：yaml 或 text
+    path: ./rule_providers/your-custom-rule.yaml  # 保存路径
+    url: https://example.com/your-rule.yaml       # 规则文件 URL
+    interval: 86400     # 更新间隔（秒），86400 = 24 小时
+```
+
+2. **更新 GitHub Actions 工作流** `.github/workflows/update-rules.yml`，添加下载命令：
+
+```yaml
+- name: Download rule files
+  run: |
+    # 已有的下载命令...
+    
+    # 添加新的规则下载
+    echo "Downloading Your-Custom-Rule..."
+    curl -sL "https://example.com/your-rule.yaml" \
+      -o data/rule_providers/your-custom-rule.yaml || echo "Failed to download"
+```
+
+3. **在 rules 部分引用新规则**：
+
+```yaml
+rules:
+  # 已有的规则...
+  - RULE-SET,Your-Custom-Rule,REJECT  # 或 DIRECT、代理组名称
+```
+
+#### 方式三：添加本地规则文件
+
+1. 在 `data/rule_providers/` 目录下创建 YAML 文件，例如 `my-rules.yaml`：
+
+```yaml
+payload:
+  - DOMAIN-SUFFIX,ad-example.com
+  - DOMAIN-KEYWORD,tracking
+  - DOMAIN,specific-ad-server.com
+```
+
+2. 在 `config.yaml` 中配置：
+
+```yaml
+rule-providers:
+  My-Rules:
+    type: file
+    behavior: classical
+    format: yaml
+    path: ./rule_providers/my-rules.yaml
+
+rules:
+  - RULE-SET,My-Rules,REJECT
+```
+
+### 添加私人 DNS
+
+#### 方式一：修改全局 DNS 配置
+
+编辑 `data/config.yaml` 的 `dns` 部分：
+
+```yaml
+dns:
+  enable: true
+  listen: 0.0.0.0:53
+  enhanced-mode: fake-ip
+  
+  # 添加/修改 DNS 服务器
+  nameserver:
+    - https://2026.dns1.top/dns-query        # 去广告 DNS 1
+    - https://dns.ipv4dns.com/dns-query      # 去广告 DNS 2
+    - http://dns.trli.club/doh/ad-dns-pro    # 去广告 DNS 3
+    - https://your-private-dns.com/dns-query # 你的私人 DNS
+    - 8.8.8.8                                # Google DNS（备用）
+    - 1.1.1.1                                # Cloudflare DNS（备用）
+```
+
+#### 方式二：配置 DNS 分流策略
+
+为不同域名配置不同的 DNS 服务器：
+
+```yaml
+dns:
+  # ... 其他配置 ...
+  
+  # DNS 分流策略
+  nameserver-policy:
+    # 国内域名使用特定 DNS
+    '+.cn':
+      - https://2026.dns1.top/dns-query
+      - https://dns.ipv4dns.com/dns-query
+    
+    # 特定域名使用自定义 DNS
+    '+.example.com':
+      - https://your-custom-dns.com/dns-query
+    
+    # 国外域名使用公共 DNS
+    '+.google.com':
+      - 8.8.8.8
+      - 1.1.1.1
+    '+.github.com':
+      - 8.8.8.8
+    '+.youtube.com':
+      - 8.8.8.8
+```
+
+#### 方式三：使用加密 DNS（DoH/DoT）
+
+Clash Meta 支持多种加密 DNS 协议：
 
 ```yaml
 dns:
   nameserver:
-    - https://your-custom-dns.com/dns-query
+    # DNS over HTTPS (DoH)
+    - https://dns.google/dns-query
+    - https://cloudflare-dns.com/dns-query
+    - https://dns.adguard-dns.com/dns-query  # AdGuard 去广告 DNS
+    
+    # DNS over TLS (DoT)
+    - tls://dns.google:853
+    - tls://one.one.one.one:853
+    
+    # 传统 UDP DNS
+    - 8.8.8.8
+    - 1.1.1.1
 ```
 
-## 注意事项
+### 常用 DNS 服务器推荐
 
-1. **规则更新**：首次使用可能需要等待几分钟下载规则
-2. **网络访问**：部分规则源可能需要代理才能下载
-3. **兼容性**：确保使用 Clash Meta 内核（Mihomo）
-4. **性能影响**：规则数量较多可能略微增加内存占用
+#### 去广告 DNS
+
+| DNS 提供商 | 地址 | 类型 |
+|-----------|------|------|
+| AdGuard | `https://dns.adguard-dns.com/dns-query` | DoH |
+| 2026.dns1.top | `https://2026.dns1.top/dns-query` | DoH |
+| dns.ipv4dns.com | `https://dns.ipv4dns.com/dns-query` | DoH |
+| NextDNS | `https://dns.nextdns.io/dns-query` | DoH |
+
+#### 国内 DNS
+
+| DNS 提供商 | 地址 |
+|-----------|------|
+| 阿里 DNS | `223.5.5.5`、`https://dns.alidns.com/dns-query` |
+| 腾讯 DNS | `119.29.29.29`、`https://doh.pub/dns-query` |
+| 114 DNS | `114.114.114.114` |
+
+#### 国外 DNS
+
+| DNS 提供商 | 地址 |
+|-----------|------|
+| Google DNS | `8.8.8.8`、`https://dns.google/dns-query` |
+| Cloudflare | `1.1.1.1`、`https://cloudflare-dns.com/dns-query` |
+| Quad9 | `9.9.9.9`、`https://dns.quad9.net/dns-query` |
+
+### 规则语法参考
+
+#### Clash 规则类型
+
+```yaml
+# 域名完全匹配
+- DOMAIN,example.com,REJECT
+
+# 域名后缀匹配
+- DOMAIN-SUFFIX,example.com,REJECT
+
+# 域名关键字匹配
+- DOMAIN-KEYWORD,ads,REJECT
+
+# IP CIDR 匹配
+- IP-CIDR,192.168.1.0/24,DIRECT
+
+# IP CIDR（带源地址）
+- IP-CIDR6,::1/128,DIRECT
+
+# 地理位置 IP
+- GEOIP,CN,DIRECT
+
+# 规则集（使用 rule-providers）
+- RULE-SET,Provider-Name,REJECT
+
+# 进程名匹配
+- PROCESS-NAME,Chrome.exe,DIRECT
+
+# 匹配所有
+- MATCH,DIRECT
+```
+
+#### 规则动作
+
+- `REJECT`：拒绝连接（拦截广告）
+- `DIRECT`：直连（不使用代理）
+- `代理组名称`：使用指定代理组
+- `REJECT-DROP`：直接丢弃（不返回任何信息）
+
+### 完整配置示例
+
+以下是一个添加自定义规则和 DNS 的完整示例：
+
+```yaml
+# config.yaml 片段
+
+rule-providers:
+  # 已有规则...
+  
+  # 添加自定义规则
+  Block-Tracking:
+    type: http
+    behavior: classical
+    format: yaml
+    path: ./rule_providers/block-tracking.yaml
+    url: https://raw.githubusercontent.com/example/tracking/main/rules.yaml
+    interval: 86400
+  
+  # 添加白名单规则
+  Whitelist:
+    type: file
+    behavior: classical
+    format: yaml
+    path: ./rule_providers/whitelist.yaml
+
+dns:
+  enable: true
+  enhanced-mode: fake-ip
+  
+  # 主 DNS（去广告）
+  nameserver:
+    - https://2026.dns1.top/dns-query
+    - https://dns.adguard-dns.com/dns-query
+  
+  # 备用 DNS
+  fallback:
+    - 8.8.8.8
+    - 1.1.1.1
+  
+  # DNS 分流
+  nameserver-policy:
+    '+.cn':
+      - https://dns.alidns.com/dns-query
+    '+.google.com':
+      - 8.8.8.8
+
+rules:
+  # 白名单优先（必须放在最前面）
+  - RULE-SET,Whitelist,DIRECT
+  
+  # 广告拦截规则
+  - RULE-SET,AWAvenue-Ads-Rule,REJECT
+  - RULE-SET,DD-AD,REJECT
+  - RULE-SET,Block-Tracking,REJECT
+  
+  # 其他规则...
+  - GEOIP,CN,DIRECT
+  - MATCH,自动选择
+```
+
+### 验证配置
+
+修改配置后，建议先验证 YAML 格式：
+
+```bash
+# 使用 Python 验证
+python -c "import yaml; yaml.safe_load(open('data/config.yaml', encoding='utf-8'))"
+```
+
+或在 Clash Meta 中导入前使用在线 YAML 验证工具检查。
+
+### 注意事项
+
+1. **规则优先级**：rules 列表中的规则**从上到下**依次匹配，第一条匹配的规则生效
+2. **白名单处理**：如果需要白名单，请将白名单规则放在广告拦截规则**之前**
+3. **DNS 缓存**：修改 DNS 配置后，建议清除 DNS 缓存或重启 Clash Meta
+4. **规则数量**：过多的规则会增加内存占用和匹配时间，建议根据需要选择
+5. **更新频率**：频繁更新规则可能触发 GitHub API 限制，建议合理设置 interval
 
 ## 故障排除
 
@@ -154,6 +422,12 @@ curl -L "规则 URL" -o data/rule_providers/规则文件.yaml
 1. 检查规则是否已下载完成
 2. 更新规则到最新版本
 3. 清除浏览器缓存和 DNS 缓存
+
+### 配置文件导入失败
+
+1. 检查 YAML 格式是否正确
+2. 检查配置文件编码是否为 UTF-8
+3. 查看 Clash Meta 日志获取错误信息
 
 ## 项目结构
 
