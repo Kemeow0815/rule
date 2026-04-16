@@ -2,11 +2,22 @@
 
 ## 问题已修复 ✅
 
-配置文件已更新，添加了 `proxy-providers` 部分以解决以下错误：
+配置文件已更新，解决了以下错误：
 
+**错误 1**：
 ```
 add profile error: profile does not contain `proxies` or `proxy-providers`
 ```
+
+**错误 2**：
+```
+proxy group[0]: 自动选择：`use` or `proxies` missing
+```
+
+**解决方案**：
+- ✅ 添加了 `proxy-providers` 部分
+- ✅ 使用 `use` 引用代理提供者
+- ✅ 添加了占位符文件满足验证要求
 
 ## 使用场景
 
@@ -20,9 +31,11 @@ add profile error: profile does not contain `proxies` or `proxy-providers`
 - Clash Meta 仅用作广告拦截器
 
 **配置特点**：
-- 已包含空的 `proxy-providers` 部分
-- 所有流量默认直连（通过 GEOIP,CN,DIRECT）
-- 广告自动拦截
+- ✅ 已包含 `proxy-providers` 和占位符文件
+- ✅ 代理组使用 `use` 引用占位符
+- ✅ 所有流量默认直连（通过 GEOIP,CN,DIRECT）
+- ✅ 广告自动拦截
+- ✅ 通过 Clash Meta 验证
 
 ### 场景 2：去广告 + 代理订阅
 

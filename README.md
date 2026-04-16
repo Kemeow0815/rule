@@ -466,10 +466,14 @@ rule/
 │       └── update-rules.yml    # GitHub Actions 工作流
 ├── data/
 │   ├── config.yaml             # 主配置文件
+│   ├── proxies/                # 代理文件目录
+│   │   └── placeholder.yaml    # 占位符文件（满足验证要求）
 │   └── rule_providers/         # 规则文件目录（自动生成）
 │       ├── AWAvenue-Ads-Rule-Clash.yaml
 │       ├── DD-AD.yaml
 │       └── 217heidai-adblock.yaml
+├── .gitignore                  # Git 忽略文件配置
+├── QUICKSTART.md               # 快速配置指南
 └── README.md                   # 使用说明
 ```
 
@@ -487,5 +491,6 @@ rule/
 
 ## 更新日志
 
+- 2026-04-16：修复代理组验证错误，添加占位符文件，使用 `use` 引用代理提供者
 - 2026-04-16：修复 `proxy-providers` 缺失问题，添加快速配置指南
 - 2026-04-16：初始版本，整合三个广告规则源，实现 DNS 智能分流

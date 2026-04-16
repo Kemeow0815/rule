@@ -54,17 +54,20 @@ dns:
 
 # 代理提供者配置（可选，用于添加实际代理节点）
 proxy-providers:
-  # 如果有代理订阅，可以在这里添加
-  # 示例：
-  # Your-Proxy-Provider:
-  #   type: http
-  #   url: "你的订阅链接"
-  #   path: ./proxies/your-provider.yaml
-  #   interval: 3600
-  #   health-check:
-  #     enable: true
-  #     url: http://www.gstatic.com/generate_204
-  #     interval: 300
+  # 占位符配置（满足 Clash Meta 验证要求）
+  # 如果有代理订阅，取消下面的注释并替换为你的订阅链接
+  My-Sub:
+    type: file
+    path: ./proxies/placeholder.yaml
+    # 实际使用时，取消下面的注释并删除上面 3 行
+    # type: http
+    # url: "你的订阅链接"
+    # path: ./proxies/my-sub.yaml
+    # interval: 3600
+    # health-check:
+    #   enable: true
+    #   url: http://www.gstatic.com/generate_204
+    #   interval: 300
 
 # 规则提供者配置
 rule-providers:
@@ -97,10 +100,13 @@ rule-providers:
 
 # 代理组配置
 proxy-groups:
-  # 自动选择代理组
+  # 自动选择代理组（如果有代理订阅，会在 proxy-providers 中自动加载）
   - name: 自动选择
     type: url-test
-    proxies: []
+    use:
+      - My-Sub  # 引用代理提供者，如果没有代理订阅可注释此行
+    proxies:
+      - DIRECT  # 备用选项
     url: http://www.gstatic.com/generate_204
     interval: 300
     tolerance: 50
@@ -108,8 +114,11 @@ proxy-groups:
   # 手动选择代理组
   - name: 手动选择
     type: select
+    use:
+      - My-Sub
     proxies:
       - 自动选择
+      - DIRECT
   
   # 广告拦截组
   - name: AdBlock
