@@ -428,6 +428,34 @@ curl -L "规则 URL" -o data/rule_providers/规则文件.yaml
 1. 检查 YAML 格式是否正确
 2. 检查配置文件编码是否为 UTF-8
 3. 查看 Clash Meta 日志获取错误信息
+4. **确保配置包含 `proxies` 或 `proxy-providers`**（Clash Meta 必需）
+
+### 常见错误
+
+#### 错误：`profile does not contain 'proxies' or 'proxy-providers'`
+
+**原因**：Clash Meta 要求配置文件必须包含代理节点或代理提供者
+
+**解决方案**：
+- 本配置已添加空的 `proxy-providers` 部分以满足要求
+- 如果需要使用代理，在 `proxy-providers` 中添加实际代理订阅
+- 或添加 `proxies` 部分手动配置代理节点
+
+示例（仅去广告，不使用代理）：
+```yaml
+proxy-providers:
+  # 空的代理提供者配置（满足 Clash Meta 要求）
+```
+
+示例（添加代理订阅）：
+```yaml
+proxy-providers:
+  My-Sub:
+    type: http
+    url: "你的订阅链接"
+    path: ./proxies/my-sub.yaml
+    interval: 3600
+```
 
 ## 项目结构
 
@@ -459,4 +487,5 @@ rule/
 
 ## 更新日志
 
+- 2026-04-16：修复 `proxy-providers` 缺失问题，添加快速配置指南
 - 2026-04-16：初始版本，整合三个广告规则源，实现 DNS 智能分流

@@ -52,6 +52,20 @@ dns:
       - 8.8.8.8
       - 1.1.1.1
 
+# 代理提供者配置（可选，用于添加实际代理节点）
+proxy-providers:
+  # 如果有代理订阅，可以在这里添加
+  # 示例：
+  # Your-Proxy-Provider:
+  #   type: http
+  #   url: "你的订阅链接"
+  #   path: ./proxies/your-provider.yaml
+  #   interval: 3600
+  #   health-check:
+  #     enable: true
+  #     url: http://www.gstatic.com/generate_204
+  #     interval: 300
+
 # 规则提供者配置
 rule-providers:
   # 秋风广告规则
