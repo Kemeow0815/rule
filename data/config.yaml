@@ -54,20 +54,16 @@ dns:
 
 # 代理提供者配置（可选，用于添加实际代理节点）
 proxy-providers:
-  # 占位符配置（满足 Clash Meta 验证要求）
-  # 如果有代理订阅，取消下面的注释并替换为你的订阅链接
+  # 机场订阅配置
   My-Sub:
-    type: file
-    path: ./proxies/placeholder.yaml
-    # 实际使用时，取消下面的注释并删除上面 3 行
-    # type: http
-    # url: "你的订阅链接"
-    # path: ./proxies/my-sub.yaml
-    # interval: 3600
-    # health-check:
-    #   enable: true
-    #   url: http://www.gstatic.com/generate_204
-    #   interval: 300
+    type: http
+    url: "https://1.mizuki.su/moscow?token=858ee7ce91d79480245896c71788bd3f"
+    path: ./proxies/my-sub.yaml
+    interval: 3600
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 300
 
 # 规则提供者配置
 rule-providers:
